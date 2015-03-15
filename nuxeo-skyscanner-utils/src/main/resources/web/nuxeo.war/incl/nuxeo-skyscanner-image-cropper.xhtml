@@ -1,0 +1,72 @@
+<div xmlns:nxu="http://nuxeo.org/nxweb/util"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:nxh="http://nuxeo.org/nxweb/html"
+  xmlns:nxl="http://nuxeo.org/nxforms/layout"
+  xmlns:nxd="http://nuxeo.org/nxweb/document">
+
+  <c:if test="false">
+    Reminder: Do not put comment directely in xhtml or you are gonna have trouble.
+    Use c:if test="false" to add comment in xhtml code.
+  </c:if>
+
+  <c:if test="false">
+  I just do not understand how to load the css (the main one and those of third-parties...
+  So, I force loading them here.
+  Need to ask somebody to check that...
+  </c:if>
+  <script>
+  console.log("coucou");
+  //debugger;
+  </script>
+  <script src="#{contextPath}/scripts/jquery.Jcrop.js" />
+  <script src="#{contextPath}/scripts/nuxeo-skyscanner-image-cropper.js" />
+  <LINK href="#{contextPath}/css/nuxeo-skyscanner-image-cropper.css" rel="stylesheet" type="text/css" />
+  <LINK href="#{contextPath}/css/jquery.Jcrop.css" rel="stylesheet" type="text/css" />
+
+  <h3>
+   <h:outputText value="#{currentDocument.title}"/>
+  </h3>
+
+  <div id="#{fancyboxFormId}">
+    <div>
+      <div id="#{fancyboxFormId}_buttons" class="buttonsGadget">
+      	<!--
+        <button id="#{fancyboxFormId}_cropAndSave" onclick="NxCrop.cropAndSave();" class="nxlab_button" style="margin-left: 5px">Crop in Document</button>
+        <button id="#{fancyboxFormId}_cropAndAddToViews" onclick="NxCrop.cropAndAddToViews();" class="nxlab_button" style="margin-left: 5px">Crop in Additional Formats</button>
+        -->
+        <button id="#{fancyboxFormId}_cropInCroppedPictures" onclick="NxCrop.cropInCroppedPictures();" class="nxlab_button" title="Save the result of the crop in 'Cropped Pictures'" style="margin-left: 5px">Crop</button>
+        <!--
+        <span style="width:50px"></span>
+        <button id="#{fancyboxFormId}_download" onclick="NxCrop.download()" class="nxlab_button">Crop and Download</button>
+        -->
+        <span style="width:50px"></span>
+        <span><i>Original image width: #{skyscannerImageCropHelper.getOriginalImageWidth()}, height: #{skyscannerImageCropHelper.getOriginalImageHeight()}</i></span>
+        <div id="#{fancyboxFormId}_cropCoords" style="font-size:smaller; padding-top: 5px; margin-left: 5px">
+          <label class="nxlab_cropfieldlabel">X1 <input type="text" size="4" id="#{fancyboxFormId}_cropX1" name="x1" readonly="true" class="nxlab_cropfield" /></label>
+          <label class="nxlab_cropfieldlabel">Y1 <input type="text" size="4" id="#{fancyboxFormId}_cropX2" name="y1" readonly="true" class="nxlab_cropfield" /></label>
+          <label class="nxlab_cropfieldlabel">X2 <input type="text" size="4" id="#{fancyboxFormId}_cropY1" name="x2" readonly="true" class="nxlab_cropfield" /></label>
+          <label class="nxlab_cropfieldlabel">Y2 <input type="text" size="4" id="#{fancyboxFormId}_cropY2" name="y2" readonly="true" class="nxlab_cropfield" /></label>
+          <label class="nxlab_cropfieldlabel">Width <input type="text" size="4" id="#{fancyboxFormId}_cropW" name="w" readonly="true" class="nxlab_cropfield" /></label>
+          <label class="nxlab_cropfieldlabel">Height <input type="text" size="4" id="#{fancyboxFormId}_cropH" name="h" readonly="true" class="nxlab_cropfield" /></label>
+        </div>
+      </div>
+      <p></p>
+      <div id="#{fancyboxFormId}_divImg" style="padding:5px; width: #{skyscannerImageCropHelper.getImageBoxWidth()}px; height: #{skyscannerImageCropHelper.getImageBoxHeight()}px;">
+        <!--
+        <img id="#{fancyboxFormId}_img" src="#{nxd:fileUrl('downloadPicture', document, skyscannerImageCropHelper.getimageViewName(), currentDocument.dublincore.modified)}" style="display:block; margin-left: auto; margin-right:auto" width="#{skyscannerImageCropHelper.getImageWidth()}px" height="#{skyscannerImageCropHelper.getImageHeight()}px" />
+        -->
+        
+        <img id="#{fancyboxFormId}_img" src="#{skyscannerImageCropHelper.getImageViewURL()}" style="display:block; margin-left: auto; margin-right:auto" width="#{skyscannerImageCropHelper.getImageWidth()}px" height="#{skyscannerImageCropHelper.getImageHeight()}px" />
+        
+      </div>
+    </div>
+    <script type="text/javascript" charset="utf-8">
+        NxCrop.init("#{fancyboxFormId}", "#{currentDocument.id}", #{skyscannerImageCropHelper.getImageWidth()}, #{skyscannerImageCropHelper.getImageHeight()});
+    </script>
+  </div>
+
+</div>

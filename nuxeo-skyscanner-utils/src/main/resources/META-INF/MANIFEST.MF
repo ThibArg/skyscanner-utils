@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: nuxeo-skyscanner-utils
+Bundle-Version: 5.9.6
+Bundle-Name: nuxeo-skyscanner-utils
+Bundle-ClassPath: .
+Bundle-ActivationPolicy: lazy
+Bundle-ManifestVersion: 2
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-Vendor: Nuxeo
+Nuxeo-Component: OSGI-INF/theme-contrib.xml,OSGI-INF/extensions/nuxeo-
+ skyscanner-actions-contrib.xml,OSGI-INF/extensions/org.nuxeo.skyscann
+ er.crop.SkyScannerCropAndSaveInCroppedPictures.xml,OSGI-INF/extension
+ s/org.nuxeo.skyscanner.crop.SkyScannerBatchResizeWatermarkOp.xml,OSGI
+ -INF/extensions/skyscanner-converters.xml
+

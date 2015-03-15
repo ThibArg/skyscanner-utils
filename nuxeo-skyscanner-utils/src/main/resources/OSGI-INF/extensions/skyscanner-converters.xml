@@ -1,0 +1,46 @@
+<component name="org.nuxeo.ecm.skyscanner.convertes">
+
+	<extension target="org.nuxeo.ecm.core.convert.service.ConversionServiceImpl"
+		point="converter">
+
+		<converter name="skyscannerResizePicture"
+			class="org.nuxeo.ecm.platform.convert.plugins.CommandLineConverter">
+			<parameters>
+				<parameter name="CommandLineName">skyscannerResizePicture</parameter>
+			</parameters>
+		</converter>
+
+		<converter name="skyscannerWatermarkWithImage"
+			class="org.nuxeo.ecm.platform.convert.plugins.CommandLineConverter">
+			<parameters>
+				<parameter name="CommandLineName">skyscannerWatermarkWithImage</parameter>
+			</parameters>
+		</converter>
+
+	</extension>
+
+	<require>org.nuxeo.ecm.platform.commandline.executor.service.defaultContrib
+	</require>
+	<extension
+		target="org.nuxeo.ecm.platform.commandline.executor.service.CommandLineExecutorComponent"
+		point="command">
+
+		<command name="skyscannerResizePicture" enabled="true">
+			<commandLine>convert</commandLine>
+			<parameterString>#{sourceFilePath} -resize #{width}x#{height} #{targetFilePath}
+			</parameterString>
+			<installationDirective>You need to install ImageMagick.
+			</installationDirective>
+		</command>
+
+		<command name="skyscannerWatermarkWithImage" enabled="true">
+			<commandLine>composite</commandLine>
+			<parameterString>-dissolve 95% -geometry +30+30 -gravity NorthEast #{watermarkFilePath} #{sourceFilePath} #{targetFilePath}
+			</parameterString>
+			<installationDirective>You need to install ImageMagick.
+			</installationDirective>
+		</command>
+
+	</extension>
+
+</component>

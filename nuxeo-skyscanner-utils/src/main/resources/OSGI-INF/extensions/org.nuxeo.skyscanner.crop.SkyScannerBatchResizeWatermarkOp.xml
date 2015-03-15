@@ -1,0 +1,8 @@
+<component name="org.nuxeo.skyscanner.crop.SkyScannerBatchResizeWatermarkOp">
+
+  <extension target="org.nuxeo.ecm.core.operation.OperationServiceComponent"
+    point="operations" >
+      <operation class="org.nuxeo.skyscanner.crop.SkyScannerBatchResizeWatermarkOp" />
+   </extension>
+    
+</component>
