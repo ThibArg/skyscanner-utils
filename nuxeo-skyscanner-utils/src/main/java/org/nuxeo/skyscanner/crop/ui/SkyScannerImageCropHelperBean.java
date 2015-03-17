@@ -17,6 +17,7 @@
 package org.nuxeo.skyscanner.crop.ui;
 
 import java.io.Serializable;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.seam.ScopeType;
@@ -85,6 +86,10 @@ public class SkyScannerImageCropHelperBean implements Serializable {
     protected long originalImageWidth = 0;
 
     protected long originalImageHeight = 0;
+    
+    protected double scaleH = 1.0;
+    
+    protected double scaleV = 1.0;
 
     @Create
     public void initialize() throws ClientException {
@@ -94,33 +99,43 @@ public class SkyScannerImageCropHelperBean implements Serializable {
             imageWidth = 0;
             imageHeight = 0;
             
+            try {
+                originalImageWidth = ((Long) currentDocument.getPropertyValue("picture:info/width")).intValue();
+                originalImageHeight = ((Long) currentDocument.getPropertyValue("picture:info/height")).intValue();
+            } catch (Exception e) {
+                originalImageWidth = 0;
+                originalImageHeight = 0;
+            }
+            
+            // Cf. images-service-contrib.xml
+            // We try the main views as pre-calculated by nuxeo: Small, Medium, Original
+            String [] viewNames = {"Small", "Medium", "Original"};
             MultiviewPicture mvp = currentDocument.getAdapter(MultiviewPicture.class);
             if(mvp != null) {
-                PictureView [] views = mvp.getViews();
-                for(PictureView oneView : views) {
+                
+                for(String name : viewNames) {
+                    PictureView oneView = mvp.getView(name);
+                    if(oneView != null) {
+                        String title = oneView.getTitle();
+                        String viewName = title + ":content";
+                        
+                        long viewW = 0, viewH = 0;
+                        viewW = oneView.getWidth();
+                        viewH = oneView.getHeight();
+                        
+                        if (originalImageWidth == 0 && title.toLowerCase().indexOf("original") == 0) {
+                            originalImageWidth = viewW;
+                            originalImageHeight = viewH;
+                        }
 
-                    long viewW = 0, viewH = 0;
-                    String viewName;
-
-                    String title = oneView.getTitle();
-                    viewName = title + ":content";
-
-                    viewW = oneView.getWidth();
-                    viewH = oneView.getHeight();
-
-                    if (title.toLowerCase().indexOf("original") == 0) {
-                        originalImageWidth = viewW;
-                        originalImageHeight = viewH;
-                    }
-
-                    if (viewW < kMAX_WIDTH) {
-                        if (viewW > imageWidth) {
-                            imageWidth = viewW;
-                            imageHeight = viewH;
-                            imageViewName = viewName;
+                        if (viewW < kMAX_WIDTH) {
+                            if (viewW > imageWidth) {
+                                imageWidth = viewW;
+                                imageHeight = viewH;
+                                imageViewName = viewName;
+                            }
                         }
                     }
-
                 }
 
                 // Either we have no views or none of them are < kMAX_WIDTH which is very, very unlikely. Result will be weird anyway.
@@ -163,6 +178,17 @@ public class SkyScannerImageCropHelperBean implements Serializable {
             imageHeight = kMAX_HEIGHT;
             imageWidth *= coef;
         }
+        
+        scaleH = 1.0;
+        if (originalImageWidth != (int) imageWidth) {
+            scaleH = (double) originalImageWidth / (double) imageWidth;
+        }
+        
+        scaleV = 1.0;
+        if (originalImageHeight != (int) imageHeight) {
+            scaleV = (double) originalImageHeight / (double) imageHeight;
+        }
+        
     }
     
     public String getImageViewURL() {
@@ -173,6 +199,14 @@ public class SkyScannerImageCropHelperBean implements Serializable {
 
     public String getimageViewName() {
         return imageViewName;
+    }
+    
+    public double getScaleH() {
+        return scaleH;
+    }
+    
+    public double getScaleV() {
+        return scaleV;
     }
 
     public long getImageWidth() {
