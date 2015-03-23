@@ -35,7 +35,7 @@
 
 		<command name="skyscannerWatermarkWithImage" enabled="true">
 			<commandLine>composite</commandLine>
-			<parameterString>-dissolve 95% -geometry +30+30 -gravity NorthEast #{watermarkFilePath} #{sourceFilePath} #{targetFilePath}
+			<parameterString>-dissolve 95% -geometry +30+30 -gravity #{gravity} #{watermarkFilePath} #{sourceFilePath} #{targetFilePath}
 			</parameterString>
 			<installationDirective>You need to install ImageMagick.
 			</installationDirective>

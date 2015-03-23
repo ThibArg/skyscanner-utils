@@ -212,6 +212,7 @@ public class SkyScannerBatchResizeWatermarkOp {
             props = new Properties();
             props.put("targetFileName", fileName);
             props.put("watermarkFilePath", watermarkFile.getAbsolutePath());
+            props.put("gravity", "NorthEast");
 
             chain.add("Blob.RunConverter").set("converter",
                     "skyscannerWatermarkWithImage").set("parameters", props);

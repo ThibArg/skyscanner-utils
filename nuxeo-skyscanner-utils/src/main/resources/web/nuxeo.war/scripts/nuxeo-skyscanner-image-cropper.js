@@ -17,7 +17,7 @@
 var gDocId, gCropInCroppedPictures, gChangeImgSrc, gTheImg, gTheImgDiv;
 var gX1Obj_left, gY1Obj_top, gX2Obj_right, gY2Obj_bottom, gWidthObj, gHeightObj;
 var gOrigX1Obj_left, gOrigY1Obj_top, gOrigX2Obj_right, gOrigY2Obj_bottom, gOrigWidthObj, gOrigHeightObj;
-var gJcropApi, gTheImgId, gWMPosition;
+var gJcropApi, gTheImgId, gSelectWM, gWMPosition;
 var gImageProps, gImagePropsOriginal;
 
 // Utilities
@@ -123,7 +123,7 @@ SkyscannerCrop = {
 		}
 	},
 
-	init : function (inCropDivId, inNxDocId, inImageProps) {
+	init : function (inCropDivId, inNxDocId, inImageProps, inWaterMarksJsonStr) {
 
 		// The code is called twice: When the fancybox is initialized but not
 		// yet displayed, and when it is displayed
@@ -164,6 +164,16 @@ SkyscannerCrop = {
 			// Set position on topRight
 			gWMPosition.val("Top Right");
 			
+			// setup the "watermark" dropdown
+			var watermarks = JSON.parse(inWaterMarksJsonStr);
+			gSelectWM = jQuery( document.getElementById(inCropDivId + "_wm") );
+			watermarks.forEach(function(obj) {
+				gSelectWM.append("<option value='" + obj.id + "'>" + obj.title + "</option>");
+			});
+			if(watermarks.size() > 0) {
+				gSelectWM.val(watermarks[0].id);
+			}
+			
 			gTheImg.Jcrop({
 				onSelect: function(c) {
 					if(gCropInCroppedPictures) {
@@ -203,7 +213,9 @@ SkyscannerCrop = {
 				    		width	: c.w,
 				    		height	: c.h,
 				    		pictureWidth  : gTheImg.width(),
-				    		pictureHeight : gTheImg.height()
+				    		pictureHeight : gTheImg.height(),
+				    		watermarkDocId: gSelectWM.val(),
+				    		watermarkPosition: gWMPosition.val()
 				    	},
 
 				context: {},

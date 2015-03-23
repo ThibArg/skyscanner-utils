@@ -31,12 +31,26 @@
   </h3>
 
   <div id="#{fancyboxFormId}">
+  
   	<div>
   		<div id="#{fancyboxFormId}_buttons" class="buttonsGadget" style="padding: 5px 0px 0px 5px">
   			<button id="#{fancyboxFormId}_cropInCroppedPictures" onclick="SkyscannerCrop.cropInCroppedPictures();" class="skyscannercrop_button" title="Save the result of the crop in 'Cropped Pictures'" style="margin-left: 5px">Crop</button>
 	        <span style="width:50px">  </span>
 	        <button id="#{fancyboxFormId}_changeImgSrc"  onclick="SkyscannerCrop.changeImgSrc();"  class="skyscannercrop_button" style="margin-left: 5px">Use Original Image</button>
 	        <div style="display: inline;padding-left: 10px">
+	        	<label>Watermark  
+	        		<select id="#{fancyboxFormId}_wm" name="selectWM">
+					</select>
+					<select id="#{fancyboxFormId}_wmPosition" name="selectWMPosition">
+					  <option value="Top Left">Top Left</option>
+					  <option value="Top Right">Top Right</option> 
+					  <option value="Bottom Left">Bottom Left</option>
+					  <option value="Bottom Right">Bottom Right</option>
+					</select>
+				</label>
+        	</div>
+        	<!--
+        	<div style="display: inline;padding-left: 10px">
 	        	<label>Position watermark
 	        		<select id="#{fancyboxFormId}_wmPosition" name="selectWMPosition">
 					  <option value="Top Left">Top Left</option>
@@ -46,6 +60,7 @@
 					</select>
 				</label>
         	</div>
+        	-->
   		</div>
   		
 		<div style="padding: 0px 0px 5px 5px;">
@@ -91,7 +106,7 @@
     			scaleH: #{skyscannerImageCropHelper.getScaleH()},
     			scaleV: #{skyscannerImageCropHelper.getScaleV()}
     	};
-        SkyscannerCrop.init("#{fancyboxFormId}", "#{currentDocument.id}", imageProps);
+        SkyscannerCrop.init("#{fancyboxFormId}", "#{currentDocument.id}", imageProps, '#{skyscannerImageCropHelper.getWatermarkDocsJsonStr()}');
     </script>
    
   </div>

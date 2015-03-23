@@ -30,6 +30,7 @@ import org.jboss.seam.faces.FacesMessages;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.NuxeoPrincipal;
 import org.nuxeo.ecm.platform.picture.api.PictureView;
 import org.nuxeo.ecm.platform.picture.api.adapters.MultiviewPicture;
@@ -91,6 +92,8 @@ public class SkyScannerImageCropHelperBean implements Serializable {
     protected double scaleH = 1.0;
     
     protected double scaleV = 1.0;
+    
+    protected String watermarkDocsJsonStr= "{}";
 
     @Create
     public void initialize() throws ClientException {
@@ -148,7 +151,25 @@ public class SkyScannerImageCropHelperBean implements Serializable {
             }
 
             _updateDimensions();
-
+            
+            DocumentModelList docs = documentManager.query("SELECT * FROM Picture WHERE ecm:path STARTSWITH '/default-domain/Watermarks'");
+            int docsCount = docs.size();
+            if(docsCount > 0) {
+                watermarkDocsJsonStr = "[";
+                int count = 0;
+                for(DocumentModel doc : docs) {
+                    String docStr = "{\"id\":\"" + doc.getId() + "\", \"title\": \"" + doc.getTitle() + "\"}";
+                    watermarkDocsJsonStr += docStr;
+                    count += 1;
+                    if(count < docsCount) {
+                        watermarkDocsJsonStr += ",";
+                    }
+                }
+                watermarkDocsJsonStr += "]";
+            } else {
+                watermarkDocsJsonStr = "[]";
+            }
+            
         } catch (ClientException e) {
             log.error(e);
         }
@@ -190,6 +211,10 @@ public class SkyScannerImageCropHelperBean implements Serializable {
             scaleV = (double) originalImageHeight / (double) imageHeight;
         }
         
+    }
+    
+    public String getWatermarkDocsJsonStr() {
+        return watermarkDocsJsonStr;
     }
     
     public String getImageViewURL(boolean inOriginalJpeg) {
