@@ -138,7 +138,7 @@ public class SkyScannerCropAndSaveInCroppedPictures {
         } else {
             suffix = "";
         }
-        File watermarkFile = File.createTempFile("SkyScannerBatch-", suffix);
+        File watermarkFile = File.createTempFile("SkyScannerCropWM-", suffix);
         watermark.transferTo(watermarkFile);
         watermarkFile.deleteOnExit();
         Framework.trackFile(watermarkFile, this);
@@ -159,7 +159,7 @@ public class SkyScannerCropAndSaveInCroppedPictures {
         ctx.setInput(originalPict);
 
         OperationChain chain;
-        chain = new OperationChain("SkyScannerDoTheCrop_Chain");
+        chain = new OperationChain("SkyScannerCropOne_Chain");
         chain.add(CROP_OPERATION).set("top", top).set("left", left).set(
                 "width", width).set("height", height).set("pictureWidth",
                 pictureWidth).set("pictureHeight", pictureHeight).set(
@@ -170,7 +170,7 @@ public class SkyScannerCropAndSaveInCroppedPictures {
 
 
         // ============================== Watermark
-        chain = new OperationChain("SkyScannerBatch_Watermark");
+        chain = new OperationChain("SkyScannerCropOne_WM");
         ctx.setInput(processedPict);
         // Parameters for Blob.RunConverter
         Properties props = new Properties();
@@ -211,7 +211,7 @@ public class SkyScannerCropAndSaveInCroppedPictures {
         // Force trigger the metadata mapping defined in the Studio project
         // (but ignore in case of problem)
         try {
-            chain = new OperationChain("SkyScannerDoMatadataMapping_Chain");
+            chain = new OperationChain("SkyScannerCropOne_DataMapping");
             ctx.setInput(result);
             chain.add(TriggerMetadataMappingOnDocument.ID).set("metadataMappingId", "imageInfo");
             automationService.run(ctx, chain);
@@ -219,12 +219,10 @@ public class SkyScannerCropAndSaveInCroppedPictures {
         } catch(Exception e) {
             log.error("Error getting the 'imageInfo' mapping - should be defined in the Studio project", e);
         }
-        
-
 
         // ============================== Now, we create the relation
         // Relations.CreateRelation
-        chain = new OperationChain("SkyScannerAddRelation_Chain");
+        chain = new OperationChain("SkyScannerCropOne_Relation");
         ctx.setInput(result);
         chain.add("Relations.CreateRelation").set("object", inDoc.getId()).set(
                 "predicate", "http://purl.org/dc/terms/IsBasedOn");
