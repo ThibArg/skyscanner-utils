@@ -21,6 +21,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.nuxeo.binary.metadata.internals.operations.TriggerMetadataMappingOnDocument;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationChain;
 import org.nuxeo.ecm.automation.OperationContext;
@@ -55,6 +58,8 @@ public class SkyScannerCropAndSaveInCroppedPictures {
     public static final String ID = "SkyScannerCropAndSaveInCroppedPictures";
 
     private static final String CROP_OPERATION = "ImageCrop";
+    
+    private static final Log log = LogFactory.getLog(SkyScannerCropAndSaveInCroppedPictures.class);
 
     @Context
     protected CoreSession session;
@@ -88,6 +93,12 @@ public class SkyScannerCropAndSaveInCroppedPictures {
 
     @Param(name = "targetFileNameSuffix", required = false)
     protected String targetFileNameSuffix = "";
+
+    @Param(name = "watermarkPosition", required = false, widget = Constants.W_OPTION,  values = {"Top Right", "Top Left", "Bottom Right", "Bottom Left"} )
+    protected String watermarkPosition = "Top Right";
+
+    @Param(name = "watermarkDocId", required = false)
+    protected String watermarkDocId = "";
 
     @OperationMethod
     public DocumentModel run(DocumentModel inDoc) throws OperationException {
@@ -134,8 +145,21 @@ public class SkyScannerCropAndSaveInCroppedPictures {
         title = cropped.getFilename();
         DocumentModel result = MiscTools.addToCroppedPictures(session, title,
                 cropped);
+        
+        // Force trigger the metadata mapping defined in the Studio project
+        // (but ignore in case of problem)
+        try {
+            chain = new OperationChain("SkyScannerDoMatadataMapping_Chain");
+            ctx.setInput(result);
+            chain.add(TriggerMetadataMappingOnDocument.ID).set("metadataMappingId", "imageInfo");
+            automationService.run(ctx, chain);
+            
+        } catch(Exception e) {
+            log.error("Error getting the 'imageInfo' mapping - should be defined in the Studio project", e);
+        }
+        
 
-        // Now, we ceate the relation
+        // Now, we create the relation
         // Relations.CreateRelation
         chain = new OperationChain("SkyScannerAddRelation_Chain");
         ctx.setInput(result);

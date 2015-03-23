@@ -20,47 +20,67 @@
   <script src="#{contextPath}/scripts/nuxeo-skyscanner-image-cropper.js" />
   <LINK href="#{contextPath}/css/nuxeo-skyscanner-image-cropper.css" rel="stylesheet" type="text/css" />
   <LINK href="#{contextPath}/css/jquery.Jcrop.css" rel="stylesheet" type="text/css" />
-
-  <h3>
-   <h:outputText value="#{currentDocument.title}"/>
-  </h3>
   
   <c:set var="imageWidth" value="#{skyscannerImageCropHelper.getImageWidth()}" />
   <c:set var="imageHeight" value="#{skyscannerImageCropHelper.getImageHeight()}" />
   <c:set var="originalImageWidth" value="#{skyscannerImageCropHelper.getOriginalImageWidth()}" />
   <c:set var="originalImageHeight" value="#{skyscannerImageCropHelper.getOriginalImageHeight()}" />
 
+  <h3>
+   <h:outputText value="#{currentDocument.title}"/><span class="skyscannercrop_headerInfo"><i>(Original width: #{originalImageWidth}, height: #{originalImageHeight})</i></span>
+  </h3>
+
   <div id="#{fancyboxFormId}">
-    <div>
-      <div id="#{fancyboxFormId}_buttons" class="buttonsGadget">
-        <button id="#{fancyboxFormId}_cropInCroppedPictures" onclick="SkyscannerCrop.cropInCroppedPictures();" class="skyscannercrop_button" title="Save the result of the crop in 'Cropped Pictures'" style="margin-left: 5px">Crop</button>
-        <span style="width:50px"></span>
-        <span><i>Original image width: #{skyscannerImageCropHelper.getOriginalImageWidth()}, height: #{skyscannerImageCropHelper.getOriginalImageHeight()}</i></span>
-        <div id="#{fancyboxFormId}_cropCoords" style="font-size:smaller; padding-top: 5px; margin-left: 5px">
-          <div style="display:inline-block;width:120px;"><label class="skyscannercrop_cropfieldlabel">Local (this picture)</label></div>
-          <label class="skyscannercrop_cropfieldlabel">X1 <input type="number" min="0" max="#{imageWidth}" size="4" id="#{fancyboxFormId}_cropX1" readonly="true" name="x1" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Y1 <input type="number" min="0" max="#{imageHeight}" size="4" id="#{fancyboxFormId}_cropX2" readonly="true" name="y1" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">X2 <input type="number" min="0" max="#{imageWidth}" size="4" id="#{fancyboxFormId}_cropY1" readonly="true" name="x2" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Y2 <input type="number" min="0" max="#{imageHeight}" size="4" id="#{fancyboxFormId}_cropY2" readonly="true" name="y2" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Width <input type="number" min="1" max="#{imageWidth}" size="4" id="#{fancyboxFormId}_cropW" readonly="true" name="w" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Height <input type="number" min="1" max="#{imageHeight}" size="4" id="#{fancyboxFormId}_cropH" readonly="true" name="h" class="skyscannercrop_cropfield" /></label>
-        </div>
-        <div id="#{fancyboxFormId}_cropCoordsOriginal" style="font-size:smaller; padding-top: 5px; margin-left: 5px">
-         <div style="display:inline-block;width:120px;"><label class="skyscannercrop_cropfieldlabel">In original picture</label></div>
-          <label class="skyscannercrop_cropfieldlabel">X1 <input type="number" min="0" max="originalImageWidth" size="4" id="#{fancyboxFormId}_originalX1" readonly="true" name="origx1" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Y1 <input type="number" min="0" max="originalImageHeight" size="4" id="#{fancyboxFormId}_originalX2" readonly="true" name="origy1" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">X2 <input type="number" min="0" max="originalImageWidth" size="4" id="#{fancyboxFormId}_originalY1" readonly="true" name="origx2" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Y2 <input type="number" min="0" max="originalImageHeight" size="4" id="#{fancyboxFormId}_originalY2" readonly="true" name="origy2" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Width <input type="number" min="0" max="originalImageWidth" size="4" id="#{fancyboxFormId}_originalW" readonly="true" name="origw" class="skyscannercrop_cropfield" /></label>
-          <label class="skyscannercrop_cropfieldlabel">Height <input type="number" min="0" max="originalImageHeight" size="4" id="#{fancyboxFormId}_originalH" readonly="true" name="origh" class="skyscannercrop_cropfield" /></label>
-        </div>
-      </div>
-      <p></p>
-      <div id="#{fancyboxFormId}_divImg" style="padding:5px; width: #{skyscannerImageCropHelper.getImageBoxWidth()}px; height: #{skyscannerImageCropHelper.getImageBoxHeight()}px;">        
-        <img id="#{fancyboxFormId}_img" src="#{skyscannerImageCropHelper.getImageViewURL(false)}" style="display:block; margin-left: auto; margin-right:auto" width="#{imageWidth}px" height="#{imageHeight}px" />
-      </div>
-    </div>
-    <script type="text/javascript" charset="utf-8">
+  	<div>
+  		<div id="#{fancyboxFormId}_buttons" class="buttonsGadget" style="padding: 5px 0px 0px 5px">
+  			<button id="#{fancyboxFormId}_cropInCroppedPictures" onclick="SkyscannerCrop.cropInCroppedPictures();" class="skyscannercrop_button" title="Save the result of the crop in 'Cropped Pictures'" style="margin-left: 5px">Crop</button>
+	        <span style="width:50px">  </span>
+	        <button id="#{fancyboxFormId}_changeImgSrc"  onclick="SkyscannerCrop.changeImgSrc();"  class="skyscannercrop_button" style="margin-left: 5px">Use Original Image</button>
+	        <div style="display: inline;padding-left: 10px">
+	        	<label>Position watermark
+	        		<select id="#{fancyboxFormId}_wmPosition" name="selectWMPosition">
+					  <option value="Top Left">Top Left</option>
+					  <option value="Top Right">Top Right</option> 
+					  <option value="Bottom Left">Bottom Left</option>
+					  <option value="Bottom Right">Bottom Right</option>
+					</select>
+				</label>
+        	</div>
+  		</div>
+  		
+		<div style="padding: 0px 0px 5px 5px;">
+			<table>
+				<tbody>
+					<tr>
+			      		<td><label class="skyscannercrop_cropfieldlabel">Local (this picture)</label></td>
+			      		<td><label class="skyscannercrop_cropfieldlabel">Left <input type="number" id="#{fancyboxFormId}_cropX1" min="0" max="#{imageWidth}" size="4" readonly="true" name="x1" class="skyscannercrop_cropfield" /></label></td>
+			      		<td><label class="skyscannercrop_cropfieldlabel">Top <input type="number" id="#{fancyboxFormId}_cropY1" min="0" max="#{imageHeight}" size="4" readonly="true" name="y1" class="skyscannercrop_cropfield" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Right <input type="number" id="#{fancyboxFormId}_cropX2" min="0" max="#{imageWidth}" size="4" readonly="true" name="x2" class="skyscannercrop_cropfield" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Bottom <input type="number" id="#{fancyboxFormId}_cropY2" min="0" max="#{imageHeight}" size="4" readonly="true" name="y2" class="skyscannercrop_cropfield" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Width <input type="number" id="#{fancyboxFormId}_cropW" min="1" max="#{imageWidth}" size="4" readonly="true" name="w" class="skyscannercrop_cropfield" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Height <input type="number" id="#{fancyboxFormId}_cropH" min="1" max="#{imageHeight}" size="4" readonly="true" name="h" class="skyscannercrop_cropfield" /></label></td>
+			      	</tr>
+			      	<tr>
+			      		<td><label class="skyscannercrop_cropfieldlabel">In original picture</label></td>
+			      		<td><label class="skyscannercrop_cropfieldlabel">Left <input type="number" id="#{fancyboxFormId}_originalX1" min="0" max="originalImageWidth" size="4" readonly="true" name="origx1" class="skyscannercrop_cropfield" /><img src="/nuxeo/icons/annotate.png" class="skyscannercrop_edit" onclick="SkyscannerCrop.askUserInOriginCoordinates('left');" /></label></td>
+			      		<td><label class="skyscannercrop_cropfieldlabel">Top <input type="number" id="#{fancyboxFormId}_originalY1" min="0" max="originalImageHeight" size="4" readonly="true" name="origy1" class="skyscannercrop_cropfield" /><img src="/nuxeo/icons/annotate.png" class="skyscannercrop_edit" onclick="SkyscannerCrop.askUserInOriginCoordinates('top');" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Right <input type="number" id="#{fancyboxFormId}_originalX2" min="0" max="originalImageWidth" size="4" readonly="true" name="origx2" class="skyscannercrop_cropfield" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Bottom <input type="number" id="#{fancyboxFormId}_originalY2" min="0" max="originalImageHeight" size="4" readonly="true" name="origxy2" class="skyscannercrop_cropfield" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Width <input type="number" id="#{fancyboxFormId}_originalW" min="1" max="originalImageWidth" size="4" readonly="true" name="origw" class="skyscannercrop_cropfield" /><img src="/nuxeo/icons/annotate.png" class="skyscannercrop_edit" onclick="SkyscannerCrop.askUserInOriginCoordinates('w');" /></label></td>
+				        <td><label class="skyscannercrop_cropfieldlabel">Height <input type="number" id="#{fancyboxFormId}_originalH" min="1" max="originalImageHeight" size="4" readonly="true" name="origh" class="skyscannercrop_cropfield" /><img src="/nuxeo/icons/annotate.png" class="skyscannercrop_edit" onclick="SkyscannerCrop.askUserInOriginCoordinates('h');" /></label></td>
+			      	</tr>
+	      		</tbody>
+		   	</table>
+		</div>
+	   
+		<p></p>
+		<div id="#{fancyboxFormId}_divImg" style="padding:5px; width: #{skyscannerImageCropHelper.getImageBoxWidth()}px; height: #{skyscannerImageCropHelper.getImageBoxHeight()}px;">
+			<img id="#{fancyboxFormId}_img" src="#{skyscannerImageCropHelper.getImageViewURL(false)}" style="display:block; margin-left: auto; margin-right:auto" width="#{imageWidth}px" height="#{imageHeight}px" />
+		</div>
+  		
+  	</div>
+    
+     <script type="text/javascript" charset="utf-8">
     	var imageProps = {
     			cropWidth: #{imageWidth},
     			cropHeight: #{imageHeight},
@@ -73,6 +93,7 @@
     	};
         SkyscannerCrop.init("#{fancyboxFormId}", "#{currentDocument.id}", imageProps);
     </script>
+   
   </div>
 
 </div>
