@@ -167,6 +167,8 @@ public class SkyScannerCropAndSaveInCroppedPictures {
                 targetFileNameSuffix);
         processedPict = (Blob) automationService.run(ctx, chain);
         processedPict.setMimeType(mimeType);
+        // RunCOnverter has updated the file name with our suffix. Now, we stick with it.
+        fileName = processedPict.getFilename();
 
 
         // ============================== Watermark
@@ -199,7 +201,7 @@ public class SkyScannerCropAndSaveInCroppedPictures {
                 "skyscannerWatermarkWithImage").set("parameters", props);
         processedPict = (Blob) automationService.run(ctx, chain);
         processedPict.setMimeType(mimeType);
-        
+        processedPict.setFilename(fileName);
 
         
         // ============================== Create the Picture document
