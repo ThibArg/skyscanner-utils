@@ -14,40 +14,112 @@
  * Contributors:
  *     Thibaud Arguillere
  */
-var gDocId, gCropAndSave;
-var gImgObj, gX1Obj, gX2Obj, gY1Obj, gY2Obj, gWidthObj, gHeightObj;
+var gDocId, gCropInCroppedPictures, gChangeImgSrc, gTheImg, gTheImgDiv;
+var gImgObj;
+var gX1Obj, gX2Obj, gY1Obj, gY2Obj, gWidthObj, gHeightObj;
+var gOrigX1Obj, gOrigX2Obj, gOrigY1Obj, gOrigY2Obj, gOrigWidthObj, gOrigHeightObj;
 var gJcropApi;
-var gScaleH, gScaleV;
+var gImageProps, gImagePropsOriginal;
 
-NxCrop = {
+// Utilities
+function isInteger(inString) {
+	var n = parseInt(inString);
+	if(!isNaN(n)) {
+		return n.toString().length == inString.length;
+	}
+	
+	return false;
+}
 
-	showCoordinates: function(c) {		
+SkyscannerCrop = {
+
+	showCoordinates: function(c) {
 		
-		gX1Obj.val(Math.floor(c.x * gScaleH) );
-		gX2Obj.val( Math.floor(c.y * gScaleV) );
-		gY1Obj.val( Math.floor(c.x2 * gScaleH) );
-		gY2Obj.val( Math.floor(c.y2 * gScaleV) );
-		gWidthObj.val( Math.floor(c.w * gScaleH) );
-		gHeightObj.val( Math.floor(c.h * gScaleV) );
+		gX1Obj.val(c.x);
+		gX2Obj.val(c.y);
+		gY1Obj.val(c.x2);
+		gY2Obj.val(c.y2);
+		gWidthObj.val(c.w);
+		gHeightObj.val(c.h);
 		
+		var scaleH = gImageProps.scaleH;
+		var scaleV = gImageProps.scaleV;
+		
+		gOrigX1Obj.val(Math.floor(c.x * scaleH) );
+		gOrigX2Obj.val( Math.floor(c.y * scaleV) );
+		gOrigY1Obj.val( Math.floor(c.x2 * scaleH) );
+		gOrigY2Obj.val( Math.floor(c.y2 * scaleV) );
+		gOrigWidthObj.val( Math.floor(c.w * scaleH) );
+		gOrigHeightObj.val( Math.floor(c.h * scaleV) );
+				
+	},
+	
+	askUser: function(inWhat, inObj) {
+		
+		var newValue = null,
+			tmp;
+		
+		//debugger;
+		
+		function setValueIfNotNull(inObj, inValue) {
+			if(isInteger(inValue)) {
+				inObj.val(inValue);
+			}
+		}
+		
+		switch(inWhat) {
+		case "x1":
+			newValue = prompt("Left point:");
+			setValueIfNotNull(gX1Obj, newValue);
+			break;
+
+		case "x2":
+			newValue = prompt("Top point:");
+			setValueIfNotNull(gX2Obj, newValue);
+			gX2Obj.val(newValue);
+			break;
+
+		case "w":
+			newValue = prompt("Width:");
+			if(isInteger(newValue)) {
+				tmp = parseInt(gX1Obj.val()) + parseInt(newValue);
+				gY1Obj.val(tmp);
+			}
+			break;
+
+		case "h":
+			newValue = prompt("Height:");
+			if(isInteger(newValue)) {
+				tmp = parseInt(gX2Obj.val()) + parseInt(newValue);
+				gY2Obj.val(tmp);
+			}
+			break;
+		
+		default:
+			newValue = null;
+			break;
+		}
+		
+		if(newValue != null && isInteger(newValue)) {
+			var x1 = Math.round( parseInt(gX1Obj.val()) / gImageProps.scaleH );
+			var x2 = Math.round( parseInt(gX2Obj.val()) / gImageProps.scaleV );
+			var y1 = Math.round( parseInt(gY1Obj.val()) / gImageProps.scaleH );
+			var y2 = Math.round( parseInt(gY2Obj.val()) / gImageProps.scaleV );
+			gJcropApi.setSelect([x1, x2, y1, y2]);
+		}
 	},
 
-	init : function (inCropDivId, inNxDocId, inScaleH, inScaleV) {
+	init : function (inCropDivId, inNxDocId, inImageProps) {
 
-		gScaleH = inScaleH;
-		gScaleV = inScaleV;
-		
+		gImageProps = inImageProps;
+		gImagePropsOriginal = jQuery.extend({}, gImageProps);
+				
 		gDocId = inNxDocId;
+		
+		gTheImg = jQuery( document.getElementById(inCropDivId + "_img") );
+		gTheImgDiv = jQuery( document.getElementById(inCropDivId + "_divImg") );
 
-		var gCropAndSave = jQuery( document.getElementById(inCropDivId + "_cropAndSave") );
-		if(gCropAndSave) {
-			gCropAndSave.attr("disabled", true);
-		}
-		var gCropAndAddToViews = jQuery( document.getElementById(inCropDivId + "_cropAndAddToViews") );
-		if(gCropAndAddToViews) {
-			gCropAndAddToViews.attr("disabled", true);
-		}
-		var gCropInCroppedPictures = jQuery( document.getElementById(inCropDivId + "_cropInCroppedPictures") );
+		gCropInCroppedPictures = jQuery( document.getElementById(inCropDivId + "_cropInCroppedPictures") );
 		if(gCropInCroppedPictures) {
 			gCropInCroppedPictures.attr("disabled", true);
 		}
@@ -59,141 +131,41 @@ NxCrop = {
 		gWidthObj = jQuery( document.getElementById(inCropDivId + "_cropW") );
 		gHeightObj = jQuery( document.getElementById(inCropDivId + "_cropH") );
 		
+		gOrigX1Obj = jQuery( document.getElementById(inCropDivId + "_originalX1") );
+		gOrigX2Obj = jQuery( document.getElementById(inCropDivId + "_originalX2") );
+		gOrigY1Obj = jQuery( document.getElementById(inCropDivId + "_originalY1") );
+		gOrigY2Obj = jQuery( document.getElementById(inCropDivId + "_originalY2") );
+		gOrigWidthObj = jQuery( document.getElementById(inCropDivId + "_originalW") );
+		gOrigHeightObj = jQuery( document.getElementById(inCropDivId + "_originalH") );
 
 		// The code is called twice: When the fancybox is initialized but not
-		// yes displayed, and when it is displayed
+		// yet displayed, and when it is displayed
 		// This leads to problem with the cropping tool, which duplicates
 		// the picture and losts itself.
 		var fancybox = jQuery("#fancybox-content");
 		if(fancybox && fancybox.is(":visible")) {
-			// Can't use jQuery(@-"#" + inNxDocId) because nuxeo, sometimes adds
+			// Can't use jQuery("#" + inNxDocId) because nuxeo, sometimes adds
 			// colons inside the id, so jQuery is lost.
 			gImgObj = jQuery( document.getElementById(inCropDivId + "_img") );
-			/*
-			gImgObj.imgAreaSelect({
-				handles: true,
-				onSelectEnd: function(img, selection) {
-					console.log(JSON.stringify(selection));
-				}
-			});
-			*/
+
+			//debugger;
+			gOrigX1Obj.dblclick(function() { SkyscannerCrop.askUser("x1", gX1Obj); });
+			gOrigX2Obj.dblclick(function() { SkyscannerCrop.askUser("x2", gX2Obj); });
+			gOrigWidthObj.dblclick(function() { SkyscannerCrop.askUser("w", gWidthObj); });
+			gOrigHeightObj.dblclick(function() { SkyscannerCrop.askUser("h", gHeightObj); });
 			
 			gImgObj.Jcrop({
 				onSelect: function(c) {
-					if(gCropAndSave) {
-						gCropAndSave.removeAttr("disabled");
-					}
-					if(gCropAndAddToViews) {
-						gCropAndAddToViews.removeAttr("disabled");
-					}
 					if(gCropInCroppedPictures) {
 						gCropInCroppedPictures.removeAttr("disabled");
 					}
-					NxCrop.showCoordinates(c);
+					SkyscannerCrop.showCoordinates(c);
 				},
-				onChange: NxCrop.showCoordinates
+				onChange: SkyscannerCrop.showCoordinates
 			}, function() {
 				gJcropApi = this;
 			});
-			
-			/*
-			gImgObj.cropper({
-			    aspectRatio: 1,
-			    modal: false,
-			    preview: "", //.extra-preview",
-			    done: function(data) {
-			        console.log(data);
-			    }
-			});
-			*/
 		}
-	},
-
-	cropAndSave: function() {
-
-	    var c = gJcropApi.tellSelect();
-	    if(c.w <= 0 || c.h <= 0) {
-	    	alert("There is no crop area.");
-	    } else {
-	    	// Call the ImageCropInDocumentOp operation.
-	    	// We can't use nuxeo.js, because the "nuxeo" object
-	    	// already exists (and it is the main object of
-	    	// nuxeo.js...
-	    	// And we don't have time to fix that.
-	    	var automationParams = {
-	    		params: {	incrementVersion : "Minor",
-				    		top		: c.y,
-				    		left	: c.x,
-				    		width	: c.w,
-				    		height	: c.h,
-				    		pictureWidth  : gImgObj.width(),
-				    		pictureHeight : gImgObj.height()
-				    	},
-
-				context: {},
-
-				input : gDocId
-			}
-	    	
-	    	var theURL = "/nuxeo/site/automation/ImageCropInDocument";
-	    	jQuery.ajax({
-				url		: theURL,
-				type	: "POST",
-				contentType: "application/json+nxrequest",
-				data	: JSON.stringify(automationParams),
-				headers	: {'X-NXVoidOperation': true, 'Accept': '*/*'}
-			})
-			.done( function() {
-				location.reload(true);
-			})
-			.fail( function(jqXHR, textStatus, errorThrown) {
-				//alert("Dommage. Essaye encore.");
-				alert( "Request failed: " + textStatus )
-			} );
-		}
-	},
-
-	cropAndAddToViews: function() {
-
-	    var c = gJcropApi.tellSelect();
-	    if(c.w <= 0 || c.h <= 0) {
-	    	alert("There is no crop area.");
-	    } else {
-	    	// Call the ImageCropInDocumentOp operation.
-	    	// We can't use nuxeo.js, because the "nuxeo" object
-	    	// already exists (and it is the main object of
-	    	// nuxeo.js...
-	    	// And we don't have time to fix that.
-	    	var automationParams = {
-	    		params: {	top		: c.y,
-				    		left	: c.x,
-				    		width	: c.w,
-				    		height	: c.h,
-				    		pictureWidth  : gImgObj.width(),
-				    		pictureHeight : gImgObj.height()
-				    	},
-
-				context: {},
-
-				input : gDocId
-			}
-	    	
-	    	var theURL = "/nuxeo/site/automation/ImageCropInViewsOp";
-	    	jQuery.ajax({
-				url		: theURL,
-				type	: "POST",
-				contentType: "application/json+nxrequest",
-				data	: JSON.stringify(automationParams),
-				headers	: {'X-NXVoidOperation': true, 'Accept': '*/*'}
-			})
-			.done( function() {
-				location.reload(true);
-			})
-			.fail( function(jqXHR, textStatus, errorThrown) {
-				//alert("Dommage. Essaye encore.");
-				alert( "Request failed: " + textStatus )
-			} );
-	    }
 	},
 
 	cropInCroppedPictures: function() {
@@ -236,6 +208,59 @@ NxCrop = {
 				alert( "Request failed: " + textStatus )
 			} );
 	    }
+	},
+	
+	changeImgSrc: function(inEvt) {
+		var src, w, h;
+		
+		var c = gJcropApi.tellSelect();
+				
+		if(gChangeImgSrc.text() == "Use Original Image") {
+			src = gImageProps.originalUrl;
+			w = gImageProps.originalWidth;
+			h = gImageProps.originalHeight;
+			gChangeImgSrc.text("Use Resized Image View");
+			
+			gImageProps.cropWidth = w;
+			gImageProps.cropHeight = h;
+			gImageProps.scaleH = 1.0;
+			gImageProps.scaleV = 1.0;
+			gImageProps.cropUrl = src;
+			
+			
+		} else {
+			
+			gImageProps = jQuery.extend({}, gImagePropsOriginal);
+			
+			src = gImageProps.cropUrl;
+			w = gImageProps.cropWidth;
+			h = gImageProps.cropHeight;
+			gChangeImgSrc.text("Use Original Image");
+		}
+		
+		//gTheImgDiv.width(w);
+		//gTheImgDiv.height(h);
+
+		gTheImg.width(w);
+		gTheImg.height(h);
+		gTheImg.attr("src", src);
+
+		//gJcropApi.setImage(src);
+		gJcropApi.destroy();
+		gImgObj.Jcrop({
+			onSelect: function(c) {
+				if(gCropAndSave) {
+					gCropAndSave.removeAttr("disabled");
+				}
+				if(gCropAndAddToViews) {
+					gCropAndAddToViews.removeAttr("disabled");
+				}
+				SkyscannerCrop.showCoordinates(c);
+			},
+			onChange: SkyscannerCrop.showCoordinates
+		}, function() {
+			gJcropApi = this;
+		});
 	},
 
 	lastItem: "just for no comma in the JSON"

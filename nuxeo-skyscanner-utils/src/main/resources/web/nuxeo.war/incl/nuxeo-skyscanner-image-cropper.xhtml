@@ -14,14 +14,8 @@
   </c:if>
 
   <c:if test="false">
-  I just do not understand how to load the css (the main one and those of third-parties...
-  So, I force loading them here.
-  Need to ask somebody to check that...
+  Could be loaded in a theme, etc. Easier here.
   </c:if>
-  <script>
-  console.log("coucou");
-  //debugger;
-  </script>
   <script src="#{contextPath}/scripts/jquery.Jcrop.js" />
   <script src="#{contextPath}/scripts/nuxeo-skyscanner-image-cropper.js" />
   <LINK href="#{contextPath}/css/nuxeo-skyscanner-image-cropper.css" rel="stylesheet" type="text/css" />
@@ -30,42 +24,54 @@
   <h3>
    <h:outputText value="#{currentDocument.title}"/>
   </h3>
+  
+  <c:set var="imageWidth" value="#{skyscannerImageCropHelper.getImageWidth()}" />
+  <c:set var="imageHeight" value="#{skyscannerImageCropHelper.getImageHeight()}" />
+  <c:set var="originalImageWidth" value="#{skyscannerImageCropHelper.getOriginalImageWidth()}" />
+  <c:set var="originalImageHeight" value="#{skyscannerImageCropHelper.getOriginalImageHeight()}" />
 
   <div id="#{fancyboxFormId}">
     <div>
       <div id="#{fancyboxFormId}_buttons" class="buttonsGadget">
-      	<!--
-        <button id="#{fancyboxFormId}_cropAndSave" onclick="NxCrop.cropAndSave();" class="nxlab_button" style="margin-left: 5px">Crop in Document</button>
-        <button id="#{fancyboxFormId}_cropAndAddToViews" onclick="NxCrop.cropAndAddToViews();" class="nxlab_button" style="margin-left: 5px">Crop in Additional Formats</button>
-        -->
-        <button id="#{fancyboxFormId}_cropInCroppedPictures" onclick="NxCrop.cropInCroppedPictures();" class="nxlab_button" title="Save the result of the crop in 'Cropped Pictures'" style="margin-left: 5px">Crop</button>
-        <!--
-        <span style="width:50px"></span>
-        <button id="#{fancyboxFormId}_download" onclick="NxCrop.download()" class="nxlab_button">Crop and Download</button>
-        -->
+        <button id="#{fancyboxFormId}_cropInCroppedPictures" onclick="SkyscannerCrop.cropInCroppedPictures();" class="skyscannercrop_button" title="Save the result of the crop in 'Cropped Pictures'" style="margin-left: 5px">Crop</button>
         <span style="width:50px"></span>
         <span><i>Original image width: #{skyscannerImageCropHelper.getOriginalImageWidth()}, height: #{skyscannerImageCropHelper.getOriginalImageHeight()}</i></span>
         <div id="#{fancyboxFormId}_cropCoords" style="font-size:smaller; padding-top: 5px; margin-left: 5px">
-          <label class="nxlab_cropfieldlabel">X1 <input type="text" size="4" id="#{fancyboxFormId}_cropX1" name="x1" readonly="true" class="nxlab_cropfield" /></label>
-          <label class="nxlab_cropfieldlabel">Y1 <input type="text" size="4" id="#{fancyboxFormId}_cropX2" name="y1" readonly="true" class="nxlab_cropfield" /></label>
-          <label class="nxlab_cropfieldlabel">X2 <input type="text" size="4" id="#{fancyboxFormId}_cropY1" name="x2" readonly="true" class="nxlab_cropfield" /></label>
-          <label class="nxlab_cropfieldlabel">Y2 <input type="text" size="4" id="#{fancyboxFormId}_cropY2" name="y2" readonly="true" class="nxlab_cropfield" /></label>
-          <label class="nxlab_cropfieldlabel">Width <input type="text" size="4" id="#{fancyboxFormId}_cropW" name="w" readonly="true" class="nxlab_cropfield" /></label>
-          <label class="nxlab_cropfieldlabel">Height <input type="text" size="4" id="#{fancyboxFormId}_cropH" name="h" readonly="true" class="nxlab_cropfield" /></label>
+          <div style="display:inline-block;width:120px;"><label class="skyscannercrop_cropfieldlabel">Local (this picture)</label></div>
+          <label class="skyscannercrop_cropfieldlabel">X1 <input type="number" min="0" max="#{imageWidth}" size="4" id="#{fancyboxFormId}_cropX1" readonly="true" name="x1" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Y1 <input type="number" min="0" max="#{imageHeight}" size="4" id="#{fancyboxFormId}_cropX2" readonly="true" name="y1" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">X2 <input type="number" min="0" max="#{imageWidth}" size="4" id="#{fancyboxFormId}_cropY1" readonly="true" name="x2" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Y2 <input type="number" min="0" max="#{imageHeight}" size="4" id="#{fancyboxFormId}_cropY2" readonly="true" name="y2" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Width <input type="number" min="1" max="#{imageWidth}" size="4" id="#{fancyboxFormId}_cropW" readonly="true" name="w" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Height <input type="number" min="1" max="#{imageHeight}" size="4" id="#{fancyboxFormId}_cropH" readonly="true" name="h" class="skyscannercrop_cropfield" /></label>
+        </div>
+        <div id="#{fancyboxFormId}_cropCoordsOriginal" style="font-size:smaller; padding-top: 5px; margin-left: 5px">
+         <div style="display:inline-block;width:120px;"><label class="skyscannercrop_cropfieldlabel">In original picture</label></div>
+          <label class="skyscannercrop_cropfieldlabel">X1 <input type="number" min="0" max="originalImageWidth" size="4" id="#{fancyboxFormId}_originalX1" readonly="true" name="origx1" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Y1 <input type="number" min="0" max="originalImageHeight" size="4" id="#{fancyboxFormId}_originalX2" readonly="true" name="origy1" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">X2 <input type="number" min="0" max="originalImageWidth" size="4" id="#{fancyboxFormId}_originalY1" readonly="true" name="origx2" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Y2 <input type="number" min="0" max="originalImageHeight" size="4" id="#{fancyboxFormId}_originalY2" readonly="true" name="origy2" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Width <input type="number" min="0" max="originalImageWidth" size="4" id="#{fancyboxFormId}_originalW" readonly="true" name="origw" class="skyscannercrop_cropfield" /></label>
+          <label class="skyscannercrop_cropfieldlabel">Height <input type="number" min="0" max="originalImageHeight" size="4" id="#{fancyboxFormId}_originalH" readonly="true" name="origh" class="skyscannercrop_cropfield" /></label>
         </div>
       </div>
       <p></p>
-      <div id="#{fancyboxFormId}_divImg" style="padding:5px; width: #{skyscannerImageCropHelper.getImageBoxWidth()}px; height: #{skyscannerImageCropHelper.getImageBoxHeight()}px;">
-        <!--
-        <img id="#{fancyboxFormId}_img" src="#{nxd:fileUrl('downloadPicture', document, skyscannerImageCropHelper.getimageViewName(), currentDocument.dublincore.modified)}" style="display:block; margin-left: auto; margin-right:auto" width="#{skyscannerImageCropHelper.getImageWidth()}px" height="#{skyscannerImageCropHelper.getImageHeight()}px" />
-        -->
-        
-        <img id="#{fancyboxFormId}_img" src="#{skyscannerImageCropHelper.getImageViewURL()}" style="display:block; margin-left: auto; margin-right:auto" width="#{skyscannerImageCropHelper.getImageWidth()}px" height="#{skyscannerImageCropHelper.getImageHeight()}px" />
-        
+      <div id="#{fancyboxFormId}_divImg" style="padding:5px; width: #{skyscannerImageCropHelper.getImageBoxWidth()}px; height: #{skyscannerImageCropHelper.getImageBoxHeight()}px;">        
+        <img id="#{fancyboxFormId}_img" src="#{skyscannerImageCropHelper.getImageViewURL(false)}" style="display:block; margin-left: auto; margin-right:auto" width="#{imageWidth}px" height="#{imageHeight}px" />
       </div>
     </div>
     <script type="text/javascript" charset="utf-8">
-    	NxCrop.init("#{fancyboxFormId}", "#{currentDocument.id}", #{skyscannerImageCropHelper.getScaleH()}, #{skyscannerImageCropHelper.getScaleV()});
+    	var imageProps = {
+    			cropWidth: #{imageWidth},
+    			cropHeight: #{imageHeight},
+    			cropUrl: "#{skyscannerImageCropHelper.getImageViewURL(false)}",
+    			originalWidth: #{originalImageWidth},
+    			originalHeight: #{originalImageHeight},
+    			originalUrl: "#{skyscannerImageCropHelper.getImageViewURL(true)}",
+    			scaleH: #{skyscannerImageCropHelper.getScaleH()},
+    			scaleV: #{skyscannerImageCropHelper.getScaleV()}
+    	};
+        SkyscannerCrop.init("#{fancyboxFormId}", "#{currentDocument.id}", imageProps);
     </script>
   </div>
 
