@@ -62,7 +62,7 @@ public class SkyScannerCropAndSaveInCroppedPictures {
     public static final String ID = "SkyScannerCropAndSaveInCroppedPictures";
 
     private static final String CROP_OPERATION = "ImageCrop";
-    
+
     private static final Log log = LogFactory.getLog(SkyScannerCropAndSaveInCroppedPictures.class);
 
     @Context
@@ -98,16 +98,20 @@ public class SkyScannerCropAndSaveInCroppedPictures {
     @Param(name = "targetFileNameSuffix", required = false)
     protected String targetFileNameSuffix = "";
 
-    @Param(name = "watermarkPosition", required = false, widget = Constants.W_OPTION,  values = {"Top Right", "Top Left", "Bottom Right", "Bottom Left"} )
+    @Param(name = "watermarkPosition", required = false, widget = Constants.W_OPTION, values = {
+            "Top Right", "Top Left", "Bottom Right", "Bottom Left" })
     protected String watermarkPosition = "Top Right";
 
     @Param(name = "watermarkDocId", required = false)
     protected String watermarkDocId = "";
 
     @OperationMethod
-    public DocumentModel run(DocumentModel inDoc) throws OperationException, IOException {
+    public DocumentModel run(DocumentModel inDoc) throws OperationException,
+            IOException {
 
         Blob processedPict = null;
+        OperationChain chain;
+        OperationContext ctx = new OperationContext(session);
 
         // Possibly, nothing to do.
         if (width <= 0 || height <= 0) {
@@ -123,28 +127,11 @@ public class SkyScannerCropAndSaveInCroppedPictures {
         }
 
         // ============================== Get the watermark
-        if(watermarkDocId == null || watermarkDocId.isEmpty()) {
-            throw new ClientException("Missing watermark document id");
-        }
-        DocumentModel watermarkPicture = session.getDocument(new IdRef(watermarkDocId));
-        DocumentModel watermarkDoc = session.getDocument(new IdRef(
-                watermarkDocId));
-        // We need a file on disc
-        Blob watermark = (Blob) watermarkDoc.getPropertyValue("file:content");
-        String suffix = watermark.getFilename();
-        int pos = suffix.lastIndexOf(".");
-        if (pos > 0) {
-            suffix = suffix.substring(pos);
-        } else {
-            suffix = "";
-        }
-        File watermarkFile = File.createTempFile("SkyScannerCropWM-", suffix);
-        watermark.transferTo(watermarkFile);
-        watermarkFile.deleteOnExit();
+        File watermarkFile = MiscTools.createWMFileForDocId(session,
+                watermarkDocId);
         Framework.trackFile(watermarkFile, this);
-        
 
-     // ============================== 
+        // ============================== Get original info
         Blob originalPict = (Blob) inDoc.getPropertyValue("file:content");
         String fileName = originalPict.getFilename();
         String mimeType = originalPict.getMimeType();
@@ -154,56 +141,41 @@ public class SkyScannerCropAndSaveInCroppedPictures {
                     + "x" + height;
         }
 
-     // ============================== Crop (nuxeo-labs crop operation)
-        OperationContext ctx = new OperationContext(session);
-        ctx.setInput(originalPict);
-
-        OperationChain chain;
-        chain = new OperationChain("SkyScannerCropOne_Chain");
-        chain.add(CROP_OPERATION).set("top", top).set("left", left).set(
-                "width", width).set("height", height).set("pictureWidth",
-                pictureWidth).set("pictureHeight", pictureHeight).set(
-                "targetFileName", targetFileName).set("targetFileNameSuffix",
-                targetFileNameSuffix);
-        processedPict = (Blob) automationService.run(ctx, chain);
+        // ============================== Crop (nuxeo-labs crop operation)
+        processedPict = MiscTools.crop(session, automationService,
+                originalPict, top, left, width, height, pictureWidth,
+                pictureHeight, targetFileName, targetFileNameSuffix);
+        // Make sure we have our values
         processedPict.setMimeType(mimeType);
-        // RunCOnverter has updated the file name with our suffix. Now, we stick with it.
+        // RunConverter has updated the file name with our suffix. Now, we stick
+        // to it.
         fileName = processedPict.getFilename();
 
-
         // ============================== Watermark
-        chain = new OperationChain("SkyScannerCropOne_WM");
-        ctx.setInput(processedPict);
-        // Parameters for Blob.RunConverter
-        Properties props = new Properties();
-        props = new Properties();
-        props.put("targetFileName", fileName);
-        props.put("watermarkFilePath", watermarkFile.getAbsolutePath());
-        switch(watermarkPosition) {
+        String gravity;
+        switch (watermarkPosition) {
         case "Top Left":
-            props.put("gravity", "NorthWest");
+            gravity = "NorthWest";
             break;
 
         case "Bottom Left":
-            props.put("gravity", "SouthWest");
+            gravity = "SouthWest";
             break;
 
         case "Bottom Right":
-            props.put("gravity", "SouthEast");
+            gravity = "SouthEast";
             break;
-        
+
         default:
-            props.put("gravity", "NorthEast");
+            gravity = "NorthEast";
             break;
         }
 
-        chain.add("Blob.RunConverter").set("converter",
-                "skyscannerWatermarkWithImage").set("parameters", props);
-        processedPict = (Blob) automationService.run(ctx, chain);
+        processedPict = MiscTools.watermark(session, automationService,
+                processedPict, fileName, watermarkFile.getAbsolutePath(),
+                gravity);
         processedPict.setMimeType(mimeType);
-        processedPict.setFilename(fileName);
 
-        
         // ============================== Create the Picture document
         title = processedPict.getFilename();
         DocumentModel result = MiscTools.addToCroppedPictures(session, title,
@@ -215,11 +187,14 @@ public class SkyScannerCropAndSaveInCroppedPictures {
         try {
             chain = new OperationChain("SkyScannerCropOne_DataMapping");
             ctx.setInput(result);
-            chain.add(TriggerMetadataMappingOnDocument.ID).set("metadataMappingId", "imageInfo");
+            chain.add(TriggerMetadataMappingOnDocument.ID).set(
+                    "metadataMappingId", "imageInfo");
             automationService.run(ctx, chain);
-            
-        } catch(Exception e) {
-            log.error("Error getting the 'imageInfo' mapping - should be defined in the Studio project", e);
+
+        } catch (Exception e) {
+            log.error(
+                    "Error getting the 'imageInfo' mapping - should be defined in the Studio project",
+                    e);
         }
 
         // ============================== Now, we create the relation

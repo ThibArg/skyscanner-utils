@@ -16,21 +16,35 @@
  */
 package org.nuxeo.skyscanner.crop;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 
+import org.nuxeo.ecm.automation.AutomationService;
+import org.nuxeo.ecm.automation.OperationChain;
+import org.nuxeo.ecm.automation.OperationContext;
+import org.nuxeo.ecm.automation.OperationException;
+import org.nuxeo.ecm.automation.core.util.Properties;
 import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
+import org.nuxeo.ecm.core.api.IdRef;
+import org.nuxeo.runtime.api.Framework;
 
 /**
- * 
+ * Shared code and misc (avoid copy-paste of code, basically)
  */
 public class MiscTools {
 
     private static DocumentModel croppedPicturesWS = null;
 
     private static String LOCK = "MiscToolsMutex";
+
+    protected static int counter = 0;
+
+    protected static final String NxLAB_CROP_OPERATION = "ImageCrop";
 
     /**
      * Get the "Cropped Pictures" workspace, creates it if not found.
@@ -81,7 +95,8 @@ public class MiscTools {
                             // tests actually, the SkyScanner config allows
                             // that)
                             DocumentModelList wsRoot = inSession.query("SELECT * FROM WorkspaceRoot WHERE ecm:currentLifeCycleState != 'deleted'");
-                            // We assume we'll be able to get at least one domain
+                            // We assume we'll be able to get at least one
+                            // domain
                             // AGAIN: CHECK ACCESS RIGHTS FOR CURRENT USER
                             DocumentModel currentWSRoot = wsRoot.get(0);
                             croppedPicturesWS = inSession.createDocumentModel(
@@ -120,6 +135,93 @@ public class MiscTools {
 
         return result;
 
+    }
+
+    public static File createWMFileForDocId(CoreSession inSession, String inId)
+            throws IOException {
+
+        File wmFile;
+
+        DocumentModel watermarkDoc = inSession.getDocument(new IdRef(inId));
+        Blob watermark = (Blob) watermarkDoc.getPropertyValue("file:content");
+        String suffix = watermark.getFilename();
+        int pos = suffix.lastIndexOf(".");
+        if (pos > 0) {
+            suffix = suffix.substring(pos);
+        } else {
+            suffix = "";
+        }
+        wmFile = File.createTempFile("TempWatermark-", suffix);
+        watermark.transferTo(wmFile);
+        wmFile.deleteOnExit();
+
+        return wmFile;
+    }
+
+    public static Blob crop(CoreSession session, AutomationService as,
+            Blob inPict, long top, long left, long width, long height,
+            long pictureWidth, long pictureHeight, String targetFileName,
+            String targetFileNameSuffix) throws OperationException {
+
+        Blob result = null;
+        OperationChain chain;
+
+        OperationContext ctx = new OperationContext(session);
+        ctx.setInput(inPict);
+
+        counter += 1;
+        chain = new OperationChain("Chain_Crop_" + counter);
+
+        chain.add(NxLAB_CROP_OPERATION).set("top", top).set("left", left).set(
+                "width", width).set("height", height).set("pictureWidth",
+                pictureWidth).set("pictureHeight", pictureHeight).set(
+                "targetFileName", targetFileName).set("targetFileNameSuffix",
+                targetFileNameSuffix);
+
+        result = (Blob) as.run(ctx, chain);
+
+        return result;
+    }
+
+    // Convenience wrapper
+    public static Blob crop(CoreSession session, AutomationService as,
+            Blob inPict, int top, int left, int width, int height,
+            int pictureWidth, int pictureHeight, String targetFileName,
+            String targetFileNameSuffix) throws OperationException {
+
+        return MiscTools.crop(session, as, inPict, (long) top, (long) left,
+                (long) width, (long) height, (long) pictureWidth,
+                (long) pictureHeight, targetFileName, targetFileNameSuffix);
+
+    }
+
+    public static Blob watermark(CoreSession session, AutomationService as,
+            Blob inPict, String targetFileName, String watermarkFilePath,
+            String gravity) throws OperationException {
+
+        Blob result = null;
+        OperationChain chain;
+
+        OperationContext ctx = new OperationContext(session);
+        ctx.setInput(inPict);
+
+        counter += 1;
+        chain = new OperationChain("Chain_Watermark_" + counter);
+
+     // Parameters for Blob.RunConverter
+        Properties props = new Properties();
+        props = new Properties();
+        props.put("targetFileName", targetFileName);
+        props.put("watermarkFilePath", watermarkFilePath);
+        props.put("gravity", gravity);
+        
+        chain.add("Blob.RunConverter").set("converter",
+                "skyscannerWatermarkWithImage").set("parameters", props);
+        
+        result = (Blob) as.run(ctx, chain);
+        
+        return result;
+        
     }
 
 }

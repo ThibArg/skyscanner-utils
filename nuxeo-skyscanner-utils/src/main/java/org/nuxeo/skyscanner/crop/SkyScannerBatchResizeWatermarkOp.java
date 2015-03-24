@@ -195,32 +195,22 @@ public class SkyScannerBatchResizeWatermarkOp {
             // ==================================================
             // Crop
             // ==================================================
-            chain = new OperationChain("SkyScannerBatch_Crop");
-            ctx.setInput(processedPict);
-            chain.add(CROP_OPERATION).set("top", cropTop).set("left", cropLeft).set(
-                    "width", newWidth).set("height", newHeight).set(
-                    "targetFileName", fileName);
-            processedPict = (Blob) automationService.run(ctx, chain);
+            processedPict = MiscTools.crop(session, automationService,
+                    originalPict, cropTop, cropLeft, newWidth, newHeight, 0,
+                    0, fileName, "");
+            // Make sure we have our values
             processedPict.setMimeType(mimeType);
 
             // ==================================================
             // Watermark
             // ==================================================
-            chain = new OperationChain("SkyScannerBatch_Watermark");
-            ctx.setInput(processedPict);
-            // Parameters for Blob.RunConverter
-            props = new Properties();
-            props.put("targetFileName", fileName);
-            props.put("watermarkFilePath", watermarkFile.getAbsolutePath());
-            props.put("gravity", "NorthEast");
-
-            chain.add("Blob.RunConverter").set("converter",
-                    "skyscannerWatermarkWithImage").set("parameters", props);
-            processedPict = (Blob) automationService.run(ctx, chain);
+            processedPict = MiscTools.watermark(session, automationService,
+                    processedPict, fileName, watermarkFile.getAbsolutePath(),
+                    "NorthEast");
             processedPict.setMimeType(mimeType);
 
             // ==================================================
-            // Create the cropped Picture
+            // Create the cropped Picture Document
             // ==================================================
             DocumentModel newPictureDoc = MiscTools.addToCroppedPictures(
                     session, null, processedPict);
